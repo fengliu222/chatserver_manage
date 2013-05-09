@@ -1,0 +1,109 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>1服后台聊天</title>
+	<link rel="stylesheet" href="css/bootstrap.css">
+
+	<script src='http://lib.sinaapp.com/js/jquery/1.7.2/jquery.min.js'></script>
+	<script src="js/bootstrap.js"></script>
+	<script src="js/bootstrap-alert.js"></script>
+	<script src="js/util.js"></script>
+	<script src="http://localhost:3000/socket.io/socket.io.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/chat.js"></script>
+	<style>
+		body,html{
+			height:100%;
+		}
+		#main{
+			width:960px;
+			height:100%;
+			margin:0 auto;
+			 
+		}
+		#chatContent{
+			height:70%;
+			background: rgb(241, 241, 241);
+			overflow-x: hidden;
+			overflow-y: scroll;
+		}
+		#chatContent ul{
+
+		}
+		#chatContent ul li{
+			width:920px;
+			margin:10px 0;
+		}
+		#chatInput input{
+			width:945px;
+			height:40px;
+			font-size: 20px;
+		}
+		#toAnyone{
+			display: inline;
+		}
+		#tools{
+			margin: 10px 0;
+			
+		}
+		#pri_pannel{
+			display: none;
+			overflow:hidden;
+		}
+		#changeName{
+			float: right;
+		}
+		.clear{
+			clear:both;
+		}
+		#slience_confirm{
+			display: none;
+		}
+
+	</style>
+</head>
+<body>
+	<div id="main">
+		<div id="chatContent">
+			<ul id="chatlist"></ul>
+		</div>
+		<div id="tools">
+			<div id="toAnyone">
+				<span>对</span>
+				<span style='color:red' id='who'>世界</span>
+				<span>说</span>
+			</div>
+			<div id="pri_pannel">
+				<input type='button' id="toWorld" class='btn btn-primary' value='切换回世界频道'>
+				<div class="btn-group">
+					<a href="#" class="btn  dropdown-toglle" data-toggle='dropdown'>
+						禁言
+						<span class="caret"></span>
+					</a>
+					<ul class="dropdown-menu">
+						<li><a tabindex="-1" href="#" id='silence_5m' class='before_slience'>五分钟</a></li>
+						<li><a tabindex="-1" href="#" id="silence_1h" class='before_slience'>一小时</a></li>
+						<li><a tabindex="-1" href="#" id="silence_1d" class='before_slience'>一天</a></li>
+						<li class="divider"></li>
+						<li><a tabindex="-1" href="#" id="silence_no" class='before_slience'>解除禁言</a></li>
+					</ul>
+				</div>
+			</div>
+			<input type='button' value='更改昵称' id='changeName' class='btn'/>
+			<div class="clear"></div>
+		</div>
+		
+		<div id="chatInput">
+			<input type="text" placeholder="输入聊天内容" id="input" />
+		</div>
+
+		<div class="alert alert-error" id='slience_confirm'>
+		  <button type="button" class="close" >&times;</button>
+		  <strong>你正在进行禁言操作!</strong> 
+		  你确定要将用户「<strong><span id='slience_name'></span></strong>」禁言<span id='slience_time'></span>么？
+		  <input type='button' id="do_slience" class='btn btn-danger' value='确定禁言'>
+		  <input type='button' id="cancel_slience" class='btn sclose' value='取消'>
+		</div>
+	</div>
+</body>
+</html>
