@@ -24,6 +24,7 @@ $(function(){
 
 		socket.emit("init",{});
 		socket.on("init",function(data){
+			  console.log(data);
 		      $("#chatContent").find("ul").eq(0).html(" "); 
 		          data.chatChache.each(function(i,data){
 		                                 if(data.channel != 6) {
