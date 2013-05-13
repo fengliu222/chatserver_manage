@@ -1,5 +1,4 @@
 var fs = require("fs");
-var lazy = require("./lazy");var i=0;
 Array.prototype.where = function(key,value){
 	var temp = new Array();
 	for(var i =0;i<this.length;i++){
@@ -33,20 +32,19 @@ exports = module.exports = {
 								 });
 								 
 							}else{
+								
 								fs.appendFileSync(file,JSON.stringify(json)+"\n");
+								
 							}
 						})
 	},
 	readTxT : function(file,callback){
-						
 						callback = callback || function(callback){console.log("callback error")}
 
 						fs.stat(file, function(err,stats){
 							if(stats == undefined){
 								 fs.open(file,"w",function(){
 								 	callback(fetchData(file));
-								 	
-								 	
 								 });
 							}else{
 								callback(fetchData(file));
@@ -55,21 +53,12 @@ exports = module.exports = {
 						})
 
 						function fetchData(){
-							
-							console.log(i);
-							i++
-							var chatCache_20 = new Array();
-							fs.readFile(file,function(err,data){
-								if(err) console.log("文件读取错误： "+err);
-
-								data.toString().split('\n').each(function(i,self,length){
-									if(i<length-1) chatCache_20.push(JSON.parse(self));
-									console.log(chatCache_20);
-									if(i>20) return;
+							var chatCache = new Array();
+							var data = fs.readFileSync(file,"utf-8");
+							data.toString().split('\n').each(function(i,self,length){
+									if(i<length-1) chatCache.push(JSON.parse(self));
 								});
-							});
-							console.log(chatCache_20)
-							return chatCache_20;
+							return chatCache;
 						}		
 	}
 }

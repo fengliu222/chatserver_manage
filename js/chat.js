@@ -20,7 +20,7 @@ $(function(){
 
 
 	function bindChatServerAndSocketListener(){
-		socket = io.connect('http://localhost:3000');
+		socket = io.connect('http://60.174.232.4:3000');
 
 		socket.emit("init",{});
 		socket.on("init",function(data){
@@ -84,7 +84,7 @@ $(function(){
 				var name = $("#who").html();
 				if($(this).attr("id") != "silence_no"){
 					var func = $(this).attr("id");
-					var time = func.split("_")[1];
+					var time = parseInt($(this).attr("data-sec"));
 					var timeText = $(this).html();
 					showConfirm(func,name,time,timeText);
 				}else{

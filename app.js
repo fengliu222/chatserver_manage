@@ -9,44 +9,91 @@ var http = require('http').createServer(),
     util = require("./util");
 
 var connectCount = 0,
-	chatChache_filePath='chatcache.txt',
+	chatCache_filePath='chatcache.txt',
 	slienceList_filePath='sliencelist.txt',
 	sysTimer = -1,
-	slienceTimer = -1;
+	slienceTimer = -1,
+	initChatOn = false;
 
 var chatCache = new Array();
+var slienceCache = new Array();
 
-util.readTxT(chatChache_filePath,function(chatCache_20){
-	chatChache = chatCache_20;
+//初始化，将缓存文件中的数据存入内存。
+util.readTxT(chatCache_filePath,function(chatCache_20){
+	chatCache = chatCache_20;
+	initChatOn = true;
+});
+util.readTxT(slienceList_filePath,function(s){
+	slienceCache = s;
 });
 
+//禁言处理函数
 handleSlience = {
  	do_slience: function(name,time){
+ 		var haveExist = false;
  		var req = {
  			oname:name,
  			odate:new Date().getTime(),
  			otime:time
- 			
  		}
+ 		slienceCache.each(function(i,self,length){
+ 			 if(self.oname == name){
+ 			 	haveExist = true;
+ 			 }
+ 		})
  		//util.writeJSONtoTxt(slienceList_filePath,req);
+ 		if(slienceCache && !haveExist) slienceCache.push(req);
  	},
  	cancel_slience: function(name){
- 		var nameStr = "\"name\":\""+name+"\"";
- 		util.readTxT(slienceList_filePath,function(data){
- 			console.log(data);
- 			data.each(function(i,self,length){
- 				// console.log(JSON.parse(self));
- 				// if(self.name= nameStr){
- 				// 	console.log("有")
- 				// }
- 			})
+ 		slienceCache.each(function(i,self,length){
+ 			 if(self.oname == name){
+ 			 	slienceCache.splice(i,1);
+ 			 }
  		})
  	},
- 	timer: function(){
+ 	checkSlience:function(name){
+ 		var s = false;
+ 		slienceCache.each(function(i,self,length){
+ 			if(self.oname == name) s = true;
+ 		});
+ 		return s;
+ 	},
+ 	 	sTime : function(name){
+ 		var t = 0;
+ 		var startTime=0;
+ 		var sliTime=0;
+ 		var curTime = new Date().getTime();
 
+ 		slienceCache.each(function(i,self,length){
+ 			if(self.oname == name) {
+ 				startTime =  parseInt(self.odate);
+ 				sliTime = self.otime;
+ 			}
+ 		});
+
+ 	   var d = sliTime - Math.ceil((curTime-startTime)/1000);
+       if(d>0) return d;
+       else return 0;
  	}
 
 }
+//半分钟一次的禁言检测。
+if(slienceTimer == -1){ 
+	slienceTimer = setInterval(function(){
+		var curTime = new Date().getTime();
+		slienceCache.each(function(i,self,length){
+			var sliTime = self.otime;
+			var startTime = parseInt(self.odate);
+
+			var d = Math.ceil((curTime-startTime)/1000);
+
+ 			if(d >= sliTime){
+ 				slienceCache.splice(i,1);
+ 			}
+		})
+	},30000);
+}
+
 
 http.listen(3000);
 //Socket Listener
@@ -78,42 +125,59 @@ socketio.on("connection",function(socket){
 	            dn2:"" ,
 	            curChannel:msg.curChannel
 	        }
-	       
-			// Cache 20 messages.
-			chatCache.length>20 ?  (chatCache.shift() ? chatCache.push(res) : "") : chatCache.push(res) ;
-	        //util.writeJSONtoTxt(chatChache_filePath,res);
+	        console.log(handleSlience.checkSlience(msg.name));
+	        if(!handleSlience.checkSlience(msg.name)){
+				// Cache 20 messages.
+				chatCache.push(res) ;
 
-	        // Public Message
-			if(msg.channel == 0){
-				socket.emit('pubMessage',res2,function(){
-					console.log("ok");
-				});
-				socket.broadcast.emit('pubMessage',res,function(){
-					console.log("ok");
+		        // Public Message
+		       
+				if(msg.channel == 0 ){
+					socket.emit('pubMessage',res2,function(){
+						console.log("ok");
+					});
+					socket.broadcast.emit('pubMessage',res,function(){
+						console.log("ok");
+					});
+				}
+				// Private Message
+				else if(msg.channel == 7){	
+					socket.emit('priMessage',res,function(){
+						console.log("ok");
+					});
+					socket.broadcast.emit('priMessage',res,function(){
+						console.log("ok");
+					});
+				}
+			}else{
+				var st = handleSlience.sTime(msg.name);
+				console.log(st);
+				var f = Math.floor(st/60);
+				var sec = st - f * 60;
+				socket.emit('pubMessage',{
+					channel:msg.channel,
+		            clubname:"系统消息",
+		            dn:"",	
+		            mesContent:"很抱歉，您已经被禁言，禁言时间还有"+f+"分钟"+sec+"秒",
+		            dn1:"",
+		            dn2:"" ,
+		            curChannel:msg.curChannel
+				},function(){
+						console.log("ok");
 				});
 			}
-			// Private Message
-			else if(msg.channel == 7){	
-				socket.emit('priMessage',res,function(){
-					console.log("ok");
-				});
-				socket.broadcast.emit('priMessage',res,function(){
-					console.log("ok");
-				});
-			}
-
 
 		});
 
 		//Cache data geter
 		socket.on('getChatCache',function(type){
 			var ind = 0;
-			socket.emit("getChatCache",type==7 ? chatChache.where("channel",type) : chatChache);
+			socket.emit("getChatCache",type==7 ? chatCache.where("channel",type) : chatCache);
 		});
 
 		//Chat server init method
 		socket.on('init',function(){
-			socket.emit('init',{chatChache:chatChache});
+			socket.emit('init',{chatChache:chatCache});
 		});
 
 		socket.on("disconnect",function(){
@@ -164,12 +228,7 @@ socketio.on("connection",function(socket){
 		
 		if(sysTimer == -1) sysTimer = setInterval(fecthSystemMessage,20000);
 		//Slience handler
-		if(slienceTimer == -1){ 
-			slienceTimer = setInterval(function(){
-				handleSlience.timer.call(socket);
-			},1000);
-		}
-
+		
 });
 
 function pirintOnlineCount(){
@@ -181,28 +240,32 @@ function pirintOnlineCount(){
 
 setInterval(pirintOnlineCount,10000);
 
-//监听进程
-process.on('exit', function() {
-   chatCache.each(function(i,self,length){
-  		util.writeJSONtoTxt(chatChache_filePath,JSON.stringify(self));
+var readline = require('readline');
+
+var rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
+
+
+rl.on('SIGINT', function () {
+    console.log("on sigint");
+    fs.writeFileSync(chatCache_filePath," ");
+	fs.writeFileSync(slienceList_filePath," ");
+	
+    chatCache.each(function(i,self,length){
+  		util.writeJSONtoTxt(chatCache_filePath,self);
   	});
+  	slienceCache.each(function(i,self,length){
+  		util.writeJSONtoTxt(slienceList_filePath,self);
+  	});
+
+  	setTimeout(function(){
+  		process.exit();
+  	},1000);
 });
 
 process.on("uncaughtException",function(err){
 	console.log("发生错误："+err);
 })
 
-// process.on('exit', function () {
-// 	console.log("11111111111111111111111111111");
-
-// });
-
-// Start reading from stdin so we don't exit.
-var stdin = process.openStdin();
-
-process.on('SIGINT', function () {
-  console.log('Got SIGINT.  Press Control-D to exit.');
-    chatCache.each(function(i,self,length){
-  		util.writeJSONtoTxt(chatChache_filePath,JSON.stringify(self));
-  	});
-});

@@ -9,7 +9,7 @@
 	<script src="js/bootstrap.js"></script>
 	<script src="js/bootstrap-alert.js"></script>
 	<script src="js/util.js"></script>
-	<script src="http://localhost:3000/socket.io/socket.io.js" type="text/javascript" charset="utf-8"></script>
+	<script src="http://60.174.232.4:3000/socket.io/socket.io.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/chat.js"></script>
 	<style>
 		body,html{
@@ -81,9 +81,9 @@
 						<span class="caret"></span>
 					</a>
 					<ul class="dropdown-menu">
-						<li><a tabindex="-1" href="#" id='silence_5m' class='before_slience'>五分钟</a></li>
-						<li><a tabindex="-1" href="#" id="silence_1h" class='before_slience'>一小时</a></li>
-						<li><a tabindex="-1" href="#" id="silence_1d" class='before_slience'>一天</a></li>
+						<li><a tabindex="-1" href="#" id='silence_5m' class='before_slience' data-sec = 300>五分钟</a></li>
+						<li><a tabindex="-1" href="#" id="silence_1h" class='before_slience' data-sec = 3600>一小时</a></li>
+						<li><a tabindex="-1" href="#" id="silence_1d" class='before_slience' data-sec = 86400>一天</a></li>
 						<li class="divider"></li>
 						<li><a tabindex="-1" href="#" id="silence_no" class='before_slience'>解除禁言</a></li>
 					</ul>
