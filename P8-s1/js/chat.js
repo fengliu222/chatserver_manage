@@ -20,7 +20,7 @@ $(function(){
 
 
 	function bindChatServerAndSocketListener(){
-		socket = io.connect('http://60.174.232.4:3000');
+		socket = io.connect('http://s1.p8jzog.xdgame.cn:3000');
 
 		socket.emit("init",{});
 		socket.on("init",function(data){
