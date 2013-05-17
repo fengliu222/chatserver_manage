@@ -1,5 +1,5 @@
 ﻿<!doctype html>
-<html lang="en">
+<html>
 <head>
 	<meta charset="UTF-8">
 	<title>1服后台聊天</title>
@@ -9,7 +9,7 @@
 	<script src="js/bootstrap.js"></script>
 	<script src="js/bootstrap-alert.js"></script>
 	<script src="js/util.js"></script>
-	<script src="http://60.174.232.4:3000/socket.io/socket.io.js" type="text/javascript" charset="utf-8"></script>
+	 
 	<script src="js/chat.js"></script>
 	<style>
 		body,html{
@@ -59,11 +59,22 @@
 		#slience_confirm{
 			display: none;
 		}
+		#loadingBar{
+			display: none;
+		}
 
 	</style>
 </head>
 <body>
 	<div id="main">
+		<div id="serverlist">
+			<ul class="nav nav-pills">
+				
+			</ul>
+			<div id="loadingBar"class="progress">
+			  <div class="bar" style="width: 0%;"></div>
+			</div>
+		</div>
 		<div id="chatContent">
 			<ul id="chatlist"></ul>
 		</div>

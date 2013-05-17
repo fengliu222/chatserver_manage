@@ -1,11 +1,12 @@
-$(function(){
+﻿$(function(){
 
 	var pri = false
 		, targetPlayer = ""
-		, _name="";
+		, _name=""
+		,socket = undefined;
 
 	//初始化
-	(function(){
+	function init(){
 		if(!window.localStorage.kfName) {
 			_name = prompt("请输入您的昵称");
 			_name = (_name==null||_name=="") ? "客服" : _name;
@@ -13,18 +14,53 @@ $(function(){
 		}else{
 			_name = window.localStorage.kfName;
 		}
+		getServerList(function(src){
+			$("#loadingBar").show();
+			$("#serverlist").find("li").eq(0).toggleClass("active");
 
-		bindChatServerAndSocketListener();	//socket链接建立以及绑定
-		eventListenerCollection();	//dom事件监听集合
-	})()
+			addChatserverJs(src.split("/")[0]+"//"+src.split("/")[2]+":3000/socket.io/socket.io.js");
+			eventListenerCollection();	//dom事件监听集合
+		});
+	};
+	init();
 
 
-	function bindChatServerAndSocketListener(){
-		socket = io.connect('http://s1.p8jzog.xdgame.cn:3000');
+	function addChatserverJs(src){
+		 if(socket) socket.disconnect();
+		 $("#chatSrc").remove();
 
+         var bd= document.getElementsByTagName('body')[0];
+         var script= document.createElement('script');
+         script.type= 'text/javascript';
+         script.src = src;
+         script.id = "chatSrc";
+         script.onload = script.onreadystatechange =function(){
+         	  loadingBarController(20);
+	          bindChatServerAndSocketListener(src.split("/")[0]+"//"+src.split("/")[2]);	//socket链接建立以及绑定
+         }
+         bd.appendChild(script);
+	}
+
+	function getServerList(callback){
+		$.getJSON("http://s1.p8jzog.xdgame.cn/iframePage/Loginiframe.aspx?GetServerList_2=1&&callback=?",function(r){
+			var list = r.List.split("|");
+			list.each(function(i,self,length){
+				if(i>0) {
+					var name = self.split("#")[0];
+					var url = self.split("#")[1];
+					$("#serverlist ul").append("<li><a href='#' data-src='"+url+"'>"+name+"</a></li>");
+				}
+			})
+
+			callback(list[1].split("#")[1]);
+		});
+	}
+	function bindChatServerAndSocketListener(src){
+		loadingBarController(40);
+		socket = io.connect(src); 
 		socket.emit("init",{});
 		socket.on("init",function(data){
-			  console.log(data);
+			  loadingBarController(60);
 		      $("#chatContent").find("ul").eq(0).html(" "); 
 		          data.chatChache.each(function(i,data){
 		                                 if(data.channel != 6) {
@@ -34,12 +70,21 @@ $(function(){
 		                                 	}
 		                                 } 
 		                               });
+		      loadingBarController(100);
+		      setTimeout(function(){
+		      	$("#loadingBar").fadeOut();
+		      },600);
+		      $("#chatContent").scrollTop(9999);
+
 		});
 		socket.on('pubMessage',function(data){   
+
 					$("#chatContent").find("ul").eq(0).append("<li><a class=''  href='#'>"+data.clubname+"</a> 说： "+data.mesContent+"</li>");
+					$("#chatContent").scrollTop(9999);
 		      });
 		socket.on('priMessage',function(data){
 				formatPri(data);
+				$("#chatContent").scrollTop(9999);
 		});
 
 	}
@@ -47,11 +92,9 @@ $(function(){
 	function eventListenerCollection(){
 		 //聊天事件
 		$("#input").bind("keypress",function(e){
-
 			if(e.keyCode != 13) return;
 			if(pri)  sendChat("pri") 
-			else sendChat("pub")
-
+			else sendChat("pub");
 		});
 
 		//切换到私聊频道
@@ -94,8 +137,26 @@ $(function(){
 			})
 		})
 
+		//关闭通知条
 		$(".close,.sclose").bind("click",function(){
 			$("#slience_confirm").hide();
+		})
+
+		//选择服务器
+		$("#serverlist").find("li").each(function(){
+			$(this).on("click",function(){
+
+				if($(this).attr("class") != "active"){
+
+					var src = $(this).find("a").eq(0).attr("data-src");
+					$("#serverlist .active").toggleClass("active");
+					$(this).toggleClass("active");
+					loadingBarController(0);
+					$("#loadingBar").show();
+					$("#chatlist").empty();
+					addChatserverJs(src.split("/")[0]+"//"+src.split("/")[2]+":3000/socket.io/socket.io.js");
+				}
+			})
 		})
 
 	}
@@ -118,6 +179,7 @@ $(function(){
 		if(type == "pri"){	
 			socket.emit("chatMessage",{channel:7,name: _name,messageContent:$("#input").val(),curChannel:0,dn:$.trim(targetPlayer)});
 		}else if(type == "pub"){
+			console.log(1);
 			socket.emit("chatMessage",{channel:0,name: _name,messageContent:$("#input").val(),curChannel:0,dn:""});
 		}	
 
@@ -133,6 +195,13 @@ $(function(){
 
 	function togglePri(){
 		pri = !pri;
+	}
+
+	function loadingBarController(n){
+		if(n){
+			var jd = n+"%";
+			$("#loadingBar .bar").width(jd);
+		}
 	}
 
 })

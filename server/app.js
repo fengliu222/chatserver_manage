@@ -127,9 +127,8 @@ socketio.on("connection",function(socket){
 	        }
 	        console.log(handleSlience.checkSlience(msg.name));
 	        if(!handleSlience.checkSlience(msg.name)){
-				// Cache 20 messages.
-				chatCache.push(res) ;
-
+				// Cache 50 messages.
+				chatCache.length>50 ?  (chatCache.shift() ? chatCache.push(res) : "") : chatCache.push(res);
 		        // Public Message
 		       
 				if(msg.channel == 0 ){
